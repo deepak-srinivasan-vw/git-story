@@ -1,0 +1,10 @@
+#!/bin/bash
+GIT_ROOT_PATH=$(git rev-parse --show-toplevel)
+PREPARE_COMMIT_MSG="$GIT_ROOT_PATH/.git/hooks/prepare-commit-msg"
+cat > $PREPARE_COMMIT_MSG <<EOL
+#!/bin/bash
+
+exec git story-prepare-commit-msg "\$@"
+EOL
+
+chmod +x $PREPARE_COMMIT_MSG

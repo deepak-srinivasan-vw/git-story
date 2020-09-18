@@ -1,0 +1,39 @@
+#!/bin/bash
+GIT_ROOT_PATH=$(git rev-parse --show-toplevel)
+
+PREPARE_COMMIT_MSG="$GIT_ROOT_PATH/.git/hooks/prepare-commit-msg"
+PREPARE_COMMIT_MSG_DIR="$GIT_ROOT_PATH/.git/hooks/prepare-commit-msg.d"
+if [ ! -e "$PREPARE_COMMIT_MSG_DIR" ]; then
+  mkdir $PREPARE_COMMIT_MSG_DIR
+fi
+
+rm -rf $PREPARE_COMMIT_MSG
+git duet ${@:2}
+
+if [ -f "$PREPARE_COMMIT_MSG" ]; then
+    mv $PREPARE_COMMIT_MSG $PREPARE_COMMIT_MSG_DIR/duet-prepare-commit-msg
+fi
+
+if [ "$1" == "" ]; then
+  echo "GIT_STORY='$(git story)'"
+else
+  git story $1
+fi
+
+if [ -f "$PREPARE_COMMIT_MSG" ]; then
+    mv $PREPARE_COMMIT_MSG $PREPARE_COMMIT_MSG_DIR/story-prepare-commit-msg
+fi
+
+cat > $PREPARE_COMMIT_MSG <<EOL
+#!/bin/bash
+echo "In git story duet hook==$PREPARE_COMMIT_MSG_DIR"
+if [ -f "$PREPARE_COMMIT_MSG_DIR/story-prepare-commit-msg" ]; then
+  $PREPARE_COMMIT_MSG_DIR/story-prepare-commit-msg "\$@"
+fi
+
+if [ -f "$PREPARE_COMMIT_MSG_DIR/duet-prepare-commit-msg" ]; then
+  $PREPARE_COMMIT_MSG_DIR/duet-prepare-commit-msg "\$@"
+fi
+EOL
+
+chmod +x $PREPARE_COMMIT_MSG
